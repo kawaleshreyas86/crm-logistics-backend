@@ -22,8 +22,12 @@ RUN pip install --upgrade pip \
 # Copy the current directory contents into the container at /app
 COPY . /app/
 
+# Make entrypoint.sh executable
+RUN chmod +x /app/entrypoint.sh
+
 # Expose port 8000
 EXPOSE 8000
 
-# Command to run the application (can be overridden by docker-compose)
+# Set entrypoint and command
+ENTRYPOINT ["/app/entrypoint.sh"]
 CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
