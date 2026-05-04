@@ -1,11 +1,12 @@
+from django.db import transaction
 from rest_framework import serializers
+
 from .models import Driver, Vehicle
 
 
 class DriverSerializer(serializers.ModelSerializer):
     owner = serializers.StringRelatedField(read_only=True)
-    # Expose the assigned vehicle registration number (if any) as a read-only hint
-    assigned_vehicle_registration = serializers.SerializerMethodField(read_only=True)
+    assigned_vehicle_number = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = Driver
@@ -17,29 +18,21 @@ class DriverSerializer(serializers.ModelSerializer):
             'license_number',
             'license_expiry',
             'status',
-            'assigned_vehicle_registration',
+            'assigned_vehicle_number',
             'notes',
             'created_at',
             'updated_at',
         ]
         read_only_fields = ['id', 'owner', 'status', 'created_at', 'updated_at']
 
-    def get_assigned_vehicle_registration(self, obj):
-        """Return the registration number of the vehicle this driver is currently assigned to."""
+    def get_assigned_vehicle_number(self, obj):
         try:
-            return obj.assigned_vehicle.registration_number
+            return obj.vehicle.vehicle_number
         except Vehicle.DoesNotExist:
             return None
 
 
-class AssignDriverSerializer(serializers.Serializer):
-    """Minimal serializer used only for the assign-driver action payload."""
-    driver_id = serializers.IntegerField()
-
-
 class DriverSummarySerializer(serializers.ModelSerializer):
-    """Lightweight nested representation of a driver, embedded inside VehicleSerializer."""
-
     class Meta:
         model = Driver
         fields = ['id', 'name', 'phone', 'license_number', 'status']
@@ -47,25 +40,89 @@ class DriverSummarySerializer(serializers.ModelSerializer):
 
 class VehicleSerializer(serializers.ModelSerializer):
     owner = serializers.StringRelatedField(read_only=True)
-    current_driver = DriverSummarySerializer(read_only=True)
+    driver = DriverSummarySerializer(read_only=True)
+    current_driver = serializers.PrimaryKeyRelatedField(
+        source='driver',
+        queryset=Driver.objects.all(),
+        required=False,
+        allow_null=True,
+        write_only=True,
+    )
 
     class Meta:
         model = Vehicle
         fields = [
             'id',
             'owner',
-            'name',
-            'registration_number',
+            'vehicle_number',
             'vehicle_type',
-            'make',
+            'brand',
             'model',
             'year',
-            'fuel_type',
-            'capacity_kg',
+            'location',
             'status',
+            'driver',
             'current_driver',
-            'notes',
+            'purchase_price',
+            'purchase_date',
+            'chassis_number',
+            'engine_number',
             'created_at',
             'updated_at',
         ]
-        read_only_fields = ['id', 'owner', 'current_driver', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'owner', 'driver', 'created_at', 'updated_at']
+
+    def validate_current_driver(self, driver):
+        if driver is None:
+            return driver
+
+        request = self.context.get('request')
+        if request is not None and driver.owner_id != request.user.id:
+            raise serializers.ValidationError("Driver not found or does not belong to you.")
+
+        try:
+            assigned_vehicle = driver.vehicle
+        except Vehicle.DoesNotExist:
+            assigned_vehicle = None
+
+        if assigned_vehicle is not None and (self.instance is None or assigned_vehicle.pk != self.instance.pk):
+            raise serializers.ValidationError(
+                f"Driver '{driver.name}' is already assigned to vehicle '{assigned_vehicle.vehicle_number}'."
+            )
+
+        return driver
+
+    def create(self, validated_data):
+        driver = validated_data.pop('driver', None)
+
+        with transaction.atomic():
+            vehicle = Vehicle.objects.create(driver=driver, **validated_data)
+            if driver is not None and driver.status != 'active':
+                driver.status = 'active'
+                driver.save(update_fields=['status'])
+
+        return vehicle
+
+    def update(self, instance, validated_data):
+        driver_provided = 'driver' in validated_data
+        new_driver = validated_data.pop('driver', instance.driver)
+        old_driver = instance.driver
+
+        with transaction.atomic():
+            for attr, value in validated_data.items():
+                setattr(instance, attr, value)
+
+            if driver_provided:
+                instance.driver = new_driver
+
+            instance.save()
+
+            if driver_provided and old_driver is not None and old_driver != new_driver and old_driver.status != 'available':
+                old_driver.status = 'available'
+                old_driver.save(update_fields=['status'])
+
+            if driver_provided and new_driver is not None and old_driver != new_driver and new_driver.status != 'active':
+                new_driver.status = 'active'
+                new_driver.save(update_fields=['status'])
+
+        return instance

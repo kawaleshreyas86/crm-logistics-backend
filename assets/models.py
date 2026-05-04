@@ -9,7 +9,7 @@ class Driver(models.Model):
     Represents a driver belonging to an Owner (User).
     An owner can have multiple drivers independent of their vehicle count.
     A driver is assigned to at most one vehicle at a time (enforced via
-    the reverse OneToOne on Vehicle.current_driver).
+    the reverse OneToOne on Vehicle.driver).
     """
 
     STATUS_CHOICES = [
@@ -49,14 +49,6 @@ class Driver(models.Model):
 
 
 class Vehicle(models.Model):
-    FUEL_TYPE_CHOICES = [
-        ('petrol', 'Petrol'),
-        ('diesel', 'Diesel'),
-        ('electric', 'Electric'),
-        ('cng', 'CNG'),
-        ('hybrid', 'Hybrid'),
-    ]
-
     STATUS_CHOICES = [
         ('active', 'Active'),
         ('inactive', 'Inactive'),
@@ -64,26 +56,25 @@ class Vehicle(models.Model):
     ]
 
     owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='vehicles')
-    name = models.CharField(max_length=255, help_text="A friendly name or label for the vehicle")
-    registration_number = models.CharField(max_length=50, unique=True)
+    vehicle_number = models.CharField(max_length=50, unique=True)
     vehicle_type = models.CharField(max_length=100, help_text="e.g. Truck, Van, Bike")
-    make = models.CharField(max_length=100, help_text="Brand/manufacturer e.g. Tata, Ashok Leyland")
-    model = models.CharField(max_length=100, help_text="Model name e.g. 407, Prima")
-    year = models.PositiveIntegerField()
-    fuel_type = models.CharField(max_length=20, choices=FUEL_TYPE_CHOICES, default='diesel')
-    capacity_kg = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True,
-                                      help_text="Load capacity in kilograms")
+    brand = models.CharField(max_length=100, blank=True)
+    model = models.CharField(max_length=100, blank=True, help_text="Model name e.g. 407, Prima")
+    year = models.PositiveIntegerField(null=True, blank=True)
+    location = models.CharField(max_length=255)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='active')
-    # Nullable OneToOneField — DB-level guarantee: one driver per vehicle & one vehicle per driver
-    current_driver = models.OneToOneField(
+    driver = models.OneToOneField(
         Driver,
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
-        related_name='assigned_vehicle',
+        related_name='vehicle',
         help_text="The driver currently assigned to this vehicle"
     )
-    notes = models.TextField(blank=True, null=True)
+    purchase_price = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
+    purchase_date = models.DateField(null=True, blank=True)
+    chassis_number = models.CharField(max_length=100, blank=True)
+    engine_number = models.CharField(max_length=100, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -91,4 +82,4 @@ class Vehicle(models.Model):
         ordering = ['-created_at']
 
     def __str__(self):
-        return f"{self.name} ({self.registration_number}) - {self.owner.username}"
+        return f"{self.vehicle_number} - {self.owner.username}"
