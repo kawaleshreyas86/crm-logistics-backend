@@ -38,6 +38,10 @@ class Driver(models.Model):
         default='available'
     )
     notes = models.TextField(blank=True, null=True)
+    salary = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    joining_date = models.DateField(null=True, blank=True)
+    account_number = models.CharField(max_length=50, blank=True)
+    ifsc_code = models.CharField(max_length=20, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

@@ -1,0 +1,560 @@
+{
+  "info": {
+    "name": "CRM Logistics API",
+    "description": "Postman collection for CRM Logistics Backend APIs (Auth, Notifications, and Assets)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8000",
+      "type": "string"
+    },
+    {
+      "key": "access_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "refresh_token",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{access_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "description": "Authentication APIs (Signup, Login, Refresh, Logout)",
+      "item": [
+        {
+          "name": "Register",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"testuser\",\n  \"email\": \"test@example.com\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/register/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "register",
+                ""
+              ]
+            }
+          }
+        },
+        {
+          "name": "Login (Obtain Token)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.access) {",
+                  "    pm.collectionVariables.set(\"access_token\", jsonData.access);",
+                  "}",
+                  "if (jsonData.refresh) {",
+                  "    pm.collectionVariables.set(\"refresh_token\", jsonData.refresh);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"testuser\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/login/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login",
+                ""
+              ]
+            }
+          }
+        },
+        {
+          "name": "Refresh Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.access) {",
+                  "    pm.collectionVariables.set(\"access_token\", jsonData.access);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refresh\": \"{{refresh_token}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/refresh/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "refresh",
+                ""
+              ]
+            }
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refresh\": \"{{refresh_token}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/logout/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "logout",
+                ""
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Assets \u2014 Vehicles",
+      "description": "CRUD APIs for Vehicle model (includes nested current_driver info)",
+      "item": [
+        {
+          "name": "List Vehicles",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/assets/vehicles/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "assets",
+                "vehicles",
+                ""
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Vehicle",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"vehicle_number\": \"MH01AB1234\",\n  \"vehicle_type\": \"Truck\",\n  \"brand\": \"Tata\",\n  \"model\": \"407\",\n  \"year\": 2021,\n  \"location\": \"Mumbai\",\n  \"status\": \"active\",\n  \"purchase_price\": \"2500000.00\",\n  \"purchase_date\": \"2021-05-15\",\n  \"chassis_number\": \"CH123456789\",\n  \"engine_number\": \"EN123456789\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/assets/vehicles/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "assets",
+                "vehicles",
+                ""
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Vehicle by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/assets/vehicles/1/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "assets",
+                "vehicles",
+                "1",
+                ""
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Vehicle",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"location\": \"Pune\",\n  \"status\": \"maintenance\",\n  \"current_driver\": 1\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/assets/vehicles/1/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "assets",
+                "vehicles",
+                "1",
+                ""
+              ]
+            }
+          }
+        },
+        {
+          "name": "Delete Vehicle",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/assets/vehicles/1/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "assets",
+                "vehicles",
+                "1",
+                ""
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Assets \u2014 Drivers",
+      "description": "CRUD APIs for Driver model",
+      "item": [
+        {
+          "name": "List Drivers",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/assets/drivers/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "assets",
+                "drivers",
+                ""
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Driver",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Rajan Kumar\",\n  \"phone\": \"9876543210\",\n  \"license_number\": \"MH0120210012345\",\n  \"license_expiry\": \"2028-06-30\",\n  \"salary\": \"25000.00\",\n  \"joining_date\": \"2022-01-15\",\n  \"account_number\": \"01234567890\",\n  \"ifsc_code\": \"HDFC0001234\",\n  \"notes\": \"Experienced driver, 8 years\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/assets/drivers/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "assets",
+                "drivers",
+                ""
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Driver by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/assets/drivers/1/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "assets",
+                "drivers",
+                "1",
+                ""
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Driver",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone\": \"9000000001\",\n  \"notes\": \"Updated contact\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/assets/drivers/1/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "assets",
+                "drivers",
+                "1",
+                ""
+              ]
+            }
+          }
+        },
+        {
+          "name": "Delete Driver",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/assets/drivers/1/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "assets",
+                "drivers",
+                "1",
+                ""
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Notifications (Alert Rules)",
+      "description": "CRUD APIs for AlertRule model",
+      "item": [
+        {
+          "name": "List Alert Rules",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/notifications/alert-rules/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "notifications",
+                "alert-rules",
+                ""
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Alert Rule",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Insurance Renewal Reminder\",\n  \"message\": \"Vehicle MH01AB1234 insurance needs renewal soon.\",\n  \"task_date\": \"2024-12-01\",\n  \"remind_before_days\": 7\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/notifications/alert-rules/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "notifications",
+                "alert-rules",
+                ""
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Alert Rule by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/notifications/alert-rules/1/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "notifications",
+                "alert-rules",
+                "1",
+                ""
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Alert Rule",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Insurance Renewal Reminder (Urgent)\",\n  \"message\": \"Vehicle MH01AB1234 insurance needs renewal immediately.\",\n  \"task_date\": \"2024-12-01\",\n  \"remind_before_days\": 1\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/notifications/alert-rules/1/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "notifications",
+                "alert-rules",
+                "1",
+                ""
+              ]
+            }
+          }
+        },
+        {
+          "name": "Delete Alert Rule",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/notifications/alert-rules/1/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "notifications",
+                "alert-rules",
+                "1",
+                ""
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
