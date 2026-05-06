@@ -117,8 +117,9 @@ class VehicleSerializer(serializers.ModelSerializer):
             'engine_number',
             'created_at',
             'updated_at',
+            'documents',
         ]
-        read_only_fields = ['id', 'owner', 'driver', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'owner', 'driver', 'created_at', 'updated_at', 'documents']
 
     def validate_current_driver(self, driver):
         if driver is None:
