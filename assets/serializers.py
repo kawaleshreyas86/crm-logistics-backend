@@ -1,7 +1,7 @@
 from django.db import transaction
 from rest_framework import serializers
 
-from .models import Driver, Vehicle
+from .models import Driver, Vehicle, VehicleDocument
 
 
 class DriverSerializer(serializers.ModelSerializer):
@@ -42,9 +42,53 @@ class DriverSummarySerializer(serializers.ModelSerializer):
         fields = ['id', 'name', 'phone', 'license_number', 'status']
 
 
+class VehicleDocumentSerializer(serializers.ModelSerializer):
+    vehicle_number = serializers.CharField(source='vehicle.vehicle_number', read_only=True)
+    status = serializers.SerializerMethodField(read_only=True)
+
+    class Meta:
+        model = VehicleDocument
+        fields = [
+            'id',
+            'vehicle',
+            'vehicle_number',
+            'document_type',
+            'document_number',
+            'expiry_date',
+            'status',
+            'file',
+            'notes',
+            'created_at',
+            'updated_at',
+        ]
+        read_only_fields = ['id', 'vehicle_number', 'status', 'created_at', 'updated_at']
+
+    def get_status(self, obj):
+        if not obj.expiry_date:
+            return 'unknown'
+
+        today = date.today()
+        days_left = (obj.expiry_date - today).days
+
+        if days_left < 0:
+            return 'expired'
+        if days_left <= 7:
+            return 'due_soon'
+        if days_left <= 30:
+            return 'expiring_soon'
+        return 'valid'
+
+    def validate_vehicle(self, vehicle):
+        request = self.context.get('request')
+        if request and vehicle.owner_id != request.user.id:
+            raise serializers.ValidationError("Vehicle not found or does not belong to you.")
+        return vehicle
+
+
 class VehicleSerializer(serializers.ModelSerializer):
     owner = serializers.StringRelatedField(read_only=True)
     driver = DriverSummarySerializer(read_only=True)
+    documents = VehicleDocumentSerializer(many=True, read_only=True)
     current_driver = serializers.PrimaryKeyRelatedField(
         source='driver',
         queryset=Driver.objects.all(),

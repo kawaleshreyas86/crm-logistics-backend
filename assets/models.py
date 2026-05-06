@@ -87,3 +87,74 @@ class Vehicle(models.Model):
 
     def __str__(self):
         return f"{self.vehicle_number} - {self.owner.username}"
+
+
+class VehicleDocument(models.Model):
+    """
+    Represents documents associated with a vehicle
+    (RC, Insurance, Permit, etc.)
+    """
+
+    DOCUMENT_TYPE_CHOICES = [
+        ('rc', 'RC Book'),
+        ('insurance', 'Insurance'),
+        ('permit', 'Permit'),
+        ('pollution', 'Pollution Certificate'),
+        ('fitness', 'Fitness Certificate'),
+        ('other', 'Other'),
+    ]
+
+    vehicle = models.ForeignKey(
+        'Vehicle',
+        on_delete=models.CASCADE,
+        related_name='documents',
+        help_text="Vehicle this document belongs to"
+    )
+
+    document_type = models.CharField(
+        max_length=50,
+        choices=DOCUMENT_TYPE_CHOICES
+    )
+
+    document_number = models.CharField(
+        max_length=100,
+        help_text="Document identifier (RC number, policy number, etc.)"
+    )
+
+    expiry_date = models.DateField()
+
+    file = models.FileField(
+        upload_to='vehicle_documents/',
+        null=True,
+        blank=True,
+        help_text="Uploaded document file (PDF/image)"
+    )
+
+    notes = models.TextField(blank=True, null=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['expiry_date']
+        unique_together = ('vehicle', 'document_type')
+
+    def __str__(self):
+        return f"{self.vehicle.vehicle_number} - {self.get_document_type_display()}"
+
+    @property
+    def status(self):
+        if not self.expiry_date:
+            return "unknown"
+
+        today = date.today()
+        days_left = (self.expiry_date - today).days
+
+        if days_left < 0:
+            return "expired"
+        elif days_left <= 7:
+            return "due_soon"
+        elif days_left <= 30:
+            return "expiring_soon"
+        else:
+            return "valid"

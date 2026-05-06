@@ -5,6 +5,7 @@ from .models import Driver, Vehicle
 from .serializers import (
     DriverSerializer,
     VehicleSerializer,
+    VehicleDocumentSerializer,
 )
 
 
@@ -36,3 +37,17 @@ class VehicleViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
+
+class VehicleDocumentViewSet(viewsets.ModelViewSet):
+    """
+    Full CRUD for vehicle documents.
+    A user can only manage documents of their own vehicles.
+    """
+    serializer_class = VehicleDocumentSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return VehicleDocument.objects.filter(vehicle__owner=self.request.user).select_related('vehicle')
+
+    def perform_create(self, serializer):
+        serializer.save()
