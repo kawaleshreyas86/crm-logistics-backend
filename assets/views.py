@@ -1,7 +1,7 @@
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
 
-from .models import Driver, Vehicle
+from .models import Driver, Vehicle, VehicleDocument
 from .serializers import (
     DriverSerializer,
     VehicleSerializer,
