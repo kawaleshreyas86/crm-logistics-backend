@@ -1,5 +1,6 @@
 from django.db import transaction
 from rest_framework import serializers
+from datetime import date
 
 from .models import Driver, Vehicle, VehicleDocument
 
