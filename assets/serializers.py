@@ -2,7 +2,25 @@ from django.db import transaction
 from rest_framework import serializers
 from datetime import date
 
-from .models import Driver, Vehicle, VehicleDocument
+from .models import Driver, Vehicle, VehicleDocument, Expense
+
+class ExpenseSerializer(serializers.ModelSerializer):
+    vehicle = serializers.PrimaryKeyRelatedField(queryset=Vehicle.objects.all())
+
+    class Meta:
+        model = Expense
+        fields = [
+            'id',
+            'vehicle',
+            'date',
+            'category',
+            'amount',
+            'notes',
+            'created_at',
+            'updated_at',
+        ]
+        read_only_fields = ['id', 'created_at', 'updated_at']
+
 
 
 class DriverSerializer(serializers.ModelSerializer):

@@ -1,11 +1,12 @@
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
 
-from .models import Driver, Vehicle, VehicleDocument
+from .models import Driver, Vehicle, VehicleDocument, Expense
 from .serializers import (
     DriverSerializer,
     VehicleSerializer,
     VehicleDocumentSerializer,
+    ExpenseSerializer,
 )
 
 
@@ -48,6 +49,21 @@ class VehicleDocumentViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         return VehicleDocument.objects.filter(vehicle__owner=self.request.user).select_related('vehicle')
+
+    def perform_create(self, serializer):
+        serializer.save()
+
+
+class ExpenseViewSet(viewsets.ModelViewSet):
+    """
+    CRUD for vehicle expenses.
+    Users can only manage expenses for their own vehicles.
+    """
+    serializer_class = ExpenseSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return Expense.objects.filter(vehicle__owner=self.request.user).select_related('vehicle')
 
     def perform_create(self, serializer):
         serializer.save()

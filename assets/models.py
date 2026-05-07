@@ -158,3 +158,25 @@ class VehicleDocument(models.Model):
             return "expiring_soon"
         else:
             return "valid"
+
+class Expense(models.Model):
+    CATEGORY_CHOICES = [
+        ('fuel', 'Fuel'),
+        ('maintenance', 'Maintenance'),
+        ('insurance', 'Insurance'),
+        ('tax', 'Tax'),
+        ('other', 'Other'),
+    ]
+    vehicle = models.ForeignKey(Vehicle, on_delete=models.CASCADE, related_name='expenses')
+    date = models.DateField(help_text='Date of the expense')
+    category = models.CharField(max_length=20, choices=CATEGORY_CHOICES)
+    amount = models.DecimalField(max_digits=10, decimal_places=2, help_text='Expense amount')
+    notes = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-date']
+
+    def __str__(self):
+        return f"{self.vehicle.vehicle_number} - {self.get_category_display()} - {self.amount}"

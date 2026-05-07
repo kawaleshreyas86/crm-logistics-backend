@@ -1,6 +1,7 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import DriverViewSet, VehicleViewSet, VehicleDocumentViewSet
+from .views import DriverViewSet, VehicleViewSet, VehicleDocumentViewSet, ExpenseViewSet
+router.register(r'expenses', ExpenseViewSet, basename='expense')
 
 router = DefaultRouter()
 router.register(r'vehicles', VehicleViewSet, basename='vehicle')
